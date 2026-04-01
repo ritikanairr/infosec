@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PHISHCHECK</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&display=swap');
+
+:root {
+  --bg: #060d1f;
+  --surface: #0d1525;
+  --card: #111c30;
+  --border: #1a2840;
+  --border2: #223050;
+  --safe: #00e5a0;
+  --warn: #ffb930;
+  --danger: #ff2d55;
+  --accent: #4d9fff;
+  --text: #c8d8f0;
+  --muted: #4a6080;
+  --white: #e8f0ff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Space Grotesk', sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; overflow-x: hidden;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(77,159,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(77,159,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px; pointer-events: none;
+}
+.wrap { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 0 24px 80px; }
+header {
+  padding: 36px 0 28px; display: flex; align-items: center; gap: 14px;
+  border-bottom: 1px solid var(--border); margin-bottom: 40px;
+}
+.logo-shield {
+  width: 42px; height: 42px;
+  background: linear-gradient(135deg, var(--danger), #ff6b35);
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.logo-text { font-family: 'IBM Plex Mono', monospace; font-size: 18px; font-weight: 700; color: var(--white); }
+.logo-text em { color: var(--danger); font-style: normal; }
+.header-tag {
+  margin-left: auto; font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; color: var(--muted); letter-spacing: 1px;
+  border: 1px solid var(--border); padding: 4px 10px; border-radius: 20px;
+}
+.hero { margin-bottom: 36px; }
+.hero h1 { font-size: clamp(24px,4vw,36px); font-weight: 700; color: var(--white); line-height: 1.2; letter-spacing: -0.5px; margin-bottom: 10px; }
+.hero h1 .a1 { color: var(--danger); }
+.hero h1 .a2 { color: var(--accent); }
+.hero p { color: var(--muted); font-size: 14px; line-height: 1.7; max-width: 520px; }
+.stats { display: flex; gap: 10px; margin-bottom: 36px; flex-wrap: wrap; }
+.stat { flex: 1; min-width: 130px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+.stat-val { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 700; color: var(--white); }
+.stat-label { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.tabs { display: flex; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
+.tab { flex: 1; padding: 12px 16px; background: var(--surface); border: none; border-right: 1px solid var(--border); color: var(--muted); font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+.tab:last-child { border-right: none; }
+.tab.active { background: var(--card); color: var(--white); box-shadow: inset 0 -2px 0 var(--accent); }
+.tab:hover:not(.active) { background: var(--card); color: var(--text); }
+.scanner { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
+.scan-top { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.scan-top h2 { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 700; color: var(--white); letter-spacing: 1px; }
+.live { display: flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--safe); letter-spacing: 1px; }
+.live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--safe); animation: pulse 2s infinite; }
+.scan-body { padding: 20px; }
+.panel { display: none; }
+.panel.active { display: block; }
+.lbl { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+textarea, input[type=text] { width: 100%; background: var(--bg); border: 1px solid var(--border2); border-radius: 8px; color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 14px 16px; outline: none; resize: vertical; line-height: 1.6; transition: border-color 0.2s, box-shadow 0.2s; }
+textarea { min-height: 155px; }
+input[type=text] { height: 50px; font-size: 13px; }
+textarea:focus, input[type=text]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(77,159,255,0.08); }
+.hint { font-size: 11px; color: var(--muted); margin-top: 7px; font-family: 'IBM Plex Mono', monospace; }
+.samples { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.sbtn { font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 5px 10px; border-radius: 4px; border: 1px solid var(--border2); background: none; color: var(--muted); cursor: pointer; transition: all 0.2s; }
+.sbtn:hover { border-color: var(--accent); color: var(--accent); }
+.scan-btn { width: 100%; margin-top: 16px; padding: 14px; background: linear-gradient(135deg, var(--danger), #cc1f40); border: none; border-radius: 8px; color: #fff; font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 700; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.scan-btn:hover { transform: translateY(-1px); filter: brightness(1.1); }
+.scan-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; filter: none; }
+.api-note { background: var(--card); border: 1px solid var(--border2); border-radius: 8px; padding: 10px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.adot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.adot.on { background: var(--safe); animation: pulse 2s infinite; }
+.adot.off { background: var(--muted); }
+.loading { display: none; padding: 40px 20px; text-align: center; }
+.loading.show { display: block; }
+.spinner { width: 38px; height: 38px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 14px; }
+.lmsg { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); }
+.steps { margin-top: 14px; display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.step { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); transition: color 0.3s; }
+.step.done { color: var(--safe); }
+.step.cur { color: var(--accent); }
+.result { display: none; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; animation: fadeUp 0.4s ease both; }
+.result.show { display: block; }
+.rhead { padding: 22px 24px; display: flex; align-items: center; gap: 16px; }
+.vicon { font-size: 34px; }
+.vinfo { flex: 1; }
+.vlbl { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 2px; opacity: 0.6; margin-bottom: 4px; }
+.vverdict { font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 700; }
+.vsub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.sring { width: 68px; height: 68px; border-radius: 50%; border: 3px solid; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.snum { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 700; }
+.slbl { font-family: 'IBM Plex Mono', monospace; font-size: 8px; letter-spacing: 1px; opacity: 0.5; margin-top: 1px; }
+.safe-r .rhead { background: rgba(0,229,160,0.06); }
+.safe-r .vverdict, .safe-r .snum { color: var(--safe); }
+.safe-r .sring { border-color: var(--safe); }
+.warn-r .rhead { background: rgba(255,185,48,0.06); }
+.warn-r .vverdict, .warn-r .snum { color: var(--warn); }
+.warn-r .sring { border-color: var(--warn); }
+.danger-r .rhead { background: rgba(255,45,85,0.08); }
+.danger-r .vverdict, .danger-r .snum { color: var(--danger); }
+.danger-r .sring { border-color: var(--danger); }
+.rbody { padding: 0 24px 24px; background: var(--surface); }
+.stitle { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); padding: 16px 0 10px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+.bwrap { margin: 14px 0; }
+.btrack { height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; margin: 7px 0 4px; }
+.bfill { height: 100%; border-radius: 4px; transition: width 1.3s cubic-bezier(0.22,1,0.36,1); }
+.blbls { display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--muted); }
+.expl { background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 8px; padding: 14px 16px; font-size: 13px; line-height: 1.75; color: var(--text); margin-bottom: 14px; white-space: pre-wrap; }
+.flist { display: flex; flex-direction: column; gap: 7px; }
+.frow { display: flex; align-items: flex-start; gap: 10px; padding: 9px 12px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; }
+.ficon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+.fname { flex: 1; font-weight: 500; color: var(--text); font-size: 12px; }
+.fstat { font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 2px 7px; border-radius: 3px; font-weight: 500; white-space: nowrap; }
+.fd { background: rgba(255,45,85,0.1); color: var(--danger); }
+.fw { background: rgba(255,185,48,0.1); color: var(--warn); }
+.fs { background: rgba(0,229,160,0.1); color: var(--safe); }
+.fn { background: rgba(255,255,255,0.04); color: var(--muted); }
+.history { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.hhead { padding: 13px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.hhead h3 { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 700; color: var(--white); }
+.clr { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); background: none; border: none; cursor: pointer; padding: 3px 7px; }
+.clr:hover { color: var(--danger); }
+.hlist { max-height: 200px; overflow-y: auto; }
+.hitem { display: flex; align-items: center; gap: 10px; padding: 10px 20px; border-bottom: 1px solid var(--border); font-size: 12px; transition: background 0.1s; }
+.hitem:last-child { border-bottom: none; }
+.hitem:hover { background: var(--card); }
+.hdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.hin { flex: 1; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 320px; }
+.hsc { font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+.htm { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); }
+.hempty { padding: 28px; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); }
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+@media (max-width: 580px) { .stats { flex-direction: column; } .rhead { flex-wrap: wrap; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo-shield">🎣</div>
+    <div class="logo-text">PHISH<em>CHECK</em></div>
+    <div class="header-tag">free phishing indicator</div>
+  </header>
+
+  <div class="hero">
+    <h1>Detect <span class="a1">Phishing</span><br>Before It Gets <span class="a2">You</span></h1>
+    <p>PhishGuard analyzes emails and URLs for phishing - scoring risk, identifying tactics, and explaining exactly what it found.</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-val" id="st-t">0</div><div class="stat-label">Scans this session</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--danger)" id="st-d">0</div><div class="stat-label">Threats detected</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--warn)" id="st-w">0</div><div class="stat-label">Suspicious</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--safe)" id="st-s">0</div><div class="stat-label">Clean results</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="setMode('email',this)">📧 EMAIL SCANNER</button>
+    <button class="tab" onclick="setMode('url',this)">🔗 URL SCANNER</button>
+  </div>
+
+  <div class="scanner">
+    <div class="scan-top">
+      <h2 id="scan-title">EMAIL ANALYSIS</h2>
+      <div class="live"><div class="live-dot"></div>LIVE</div>
+    </div>
+    <div class="scan-body">
+      <div class="panel active" id="panel-email">
+        <label class="lbl">Paste Email Content (headers + body)</label>
+        <textarea id="email-in" placeholder="From: security@paypa1.com&#10;Subject: URGENT: Account suspended&#10;&#10;Dear Customer, click here immediately..."></textarea>
+        <div class="hint"># Include From, Subject, Reply-To headers for best results</div>
+        <div class="samples">
+          <button class="sbtn" onclick="load('phish')">⚠ Phishing sample</button>
+          <button class="sbtn" onclick="load('legit')">✓ Legit sample</button>
+          <button class="sbtn" onclick="load('spear')">⚠ Spear phishing</button>
+        </div>
+        <button class="scan-btn" onclick="doScan()">ANALYZE WITH PHISHCHECK</button>
+      </div>
+      <div class="panel" id="panel-url">
+        <label class="lbl">Enter URL to Inspect</label>
+        <input type="text" id="url-in" placeholder="https://example.com/login" />
+        <div class="hint"># Full URL including protocol</div>
+        <div class="samples">
+          <button class="sbtn" onclick="load('phish-url')">⚠ Phishing URL</button>
+          <button class="sbtn" onclick="load('legit-url')">✓ Safe URL</button>
+          <button class="sbtn" onclick="load('sus-url')">⚠ Suspicious URL</button>
+        </div>
+        <button class="scan-btn" onclick="doScan()">ANALYZE WITH PHISHCHECK</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="api-note" id="api-note">
+    <div class="adot on" id="adot"></div>
+    <span id="amsg">PHISHCHECK ready and API working</span>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div class="lmsg">PHISHCHECK is analyzing...</div>
+    <div class="steps">
+      <div class="step" id="s1">[ ] Reading content structure</div>
+      <div class="step" id="s2">[ ] Identifying social engineering tactics</div>
+      <div class="step" id="s3">[ ] Checking domains and links</div>
+      <div class="step" id="s4">[ ] Scoring risk level</div>
+      <div class="step" id="s5">[ ] Generating explanation</div>
+    </div>
+  </div>
+
+  <div class="result" id="result">
+    <div class="rhead" id="rhead">
+      <div class="vicon" id="vicon"></div>
+      <div class="vinfo">
+        <div class="vlbl">VERDICT</div>
+        <div class="vverdict" id="vverdict"></div>
+        <div class="vsub" id="vsub"></div>
+      </div>
+      <div class="sring" id="sring">
+        <div class="snum" id="snum">--</div>
+        <div class="slbl">RISK</div>
+      </div>
+    </div>
+    <div class="rbody">
+      <div class="bwrap">
+        <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)"><span>Risk Score</span><span id="bpct"></span></div>
+        <div class="btrack"><div class="bfill" id="bfill" style="width:0%"></div></div>
+        <div class="blbls"><span>0 SAFE</span><span>50 SUSPICIOUS</span><span>100 PHISHING</span></div>
+      </div>
+      <div class="stitle">ANALYSIS</div>
+      <div class="expl" id="expl"></div>
+      <div class="stitle">SIGNALS DETECTED</div>
+      <div class="flist" id="flist"></div>
+      <div style="margin-top:14px;display:flex;gap:8px">
+        <button class="sbtn" onclick="clearResult()">✕ Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="history">
+    <div class="hhead">
+      <h3>Scan History</h3>
+      <button class="clr" onclick="clearHist()">Clear</button>
+    </div>
+    <div class="hlist" id="hlist"><div class="hempty">No scans yet.</div></div>
+  </div>
+</div>
+
+<script>
+
+const GEMINI_API_KEY = 'AIzaSyASADEnguXqfhKb9ZvzkiP_3C-7DaAHprU';
+
+var mode = 'email';
+var hist = [];
+var counts = {t:0,d:0,w:0,s:0};
+var busy = false;
+
+var SAMPLES = {
+  phish: "From: security-alert@paypa1.com\nTo: customer@gmail.com\nSubject: URGENT: Your PayPal account has been SUSPENDED!\nReply-To: recover@paypal-helpdesk.ru\n\nDear Valued Customer,\n\nWe have detected unusual activity on your account. Your access has been TEMPORARILY SUSPENDED.\n\nYou must verify your identity IMMEDIATELY or your account will be permanently closed within 24 HOURS.\n\nClick here to restore your account: http://paypal-secure-verify.xyz/login?ref=urgent\n\nProvide your:\n- Full name\n- Credit card number\n- Social Security Number\n\nThis is your FINAL WARNING.\n\nPayPal Security Team",
+  legit: "From: newsletter@github.com\nTo: developer@example.com\nSubject: Your weekly GitHub digest\n\nHi there,\n\nHere's what happened this week across your repositories:\n\n- 3 new pull requests opened\n- 12 issues were closed\n- Your repository received 5 new stars\n\nView your full activity at github.com/dashboard\n\nManage notifications: github.com/settings/notifications\n\nGitHub, Inc. 88 Colin P Kelly Jr Street, San Francisco, CA 94107",
+  spear: "From: it-support@yourcompany-helpdesk.com\nTo: john.doe@yourcompany.com\nSubject: Action Required: Password Reset for John Doe\n\nHi John,\n\nOur IT security system detected that your corporate credentials may have been compromised in a recent data breach affecting companies in our sector.\n\nAs part of our mandatory security protocol, you are required to reset your password immediately using our secure portal:\n\nhttps://yourcompany-password-reset.net/secure/john.doe\n\nPlease use your existing credentials to log in and follow the instructions. This link expires in 2 hours.\n\nIT Security Team\nYourCompany",
+  'phish-url': 'http://paypa1-secure-login.xyz/account/verify?user=admin&token=abc123',
+  'legit-url': 'https://www.github.com/login',
+  'sus-url': 'http://bit.ly/3xK9mPQ'
+};
+
+function load(k){ if(mode==='email') document.getElementById('email-in').value=SAMPLES[k]||''; else document.getElementById('url-in').value=SAMPLES[k]||''; }
+function setMode(m,btn){ mode=m; document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');}); btn.classList.add('active'); document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');}); document.getElementById('panel-'+m).classList.add('active'); document.getElementById('scan-title').textContent=m==='email'?'EMAIL ANALYSIS':'URL ANALYSIS'; clearResult(); }
+
+var sIds=['s1','s2','s3','s4','s5'];
+var sLbls=['Reading content structure','Identifying social engineering tactics','Checking domains and links','Scoring risk level','Generating explanation'];
+var sTimer=null, sIdx=0;
+
+function startSteps(){
+  sIdx=0;
+  sIds.forEach(function(id,i){var e=document.getElementById(id);e.className='step';e.textContent='[ ] '+sLbls[i];});
+  sTimer=setInterval(function(){
+    if(sIdx>0){var p=document.getElementById(sIds[sIdx-1]);p.className='step done';p.textContent='[✓] '+sLbls[sIdx-1];}
+    if(sIdx<sIds.length){var c=document.getElementById(sIds[sIdx]);c.className='step cur';c.textContent='[→] '+sLbls[sIdx];sIdx++;}
+    else{clearInterval(sTimer);}
+  },600);
+}
+function stopSteps(){
+  clearInterval(sTimer);
+  sIds.forEach(function(id,i){var e=document.getElementById(id);e.className='step done';e.textContent='[✓] '+sLbls[i];});
+}
+function setApi(ok,msg){ document.getElementById('adot').className='adot '+(ok?'on':'off'); document.getElementById('amsg').textContent=msg; }
+
+function doScan(){
+  if(busy) return;
+  
+  if (GEMINI_API_KEY === 'YOUR_API_KEY_HERE') {
+      alert("Please enter your API key at the top of the <script> block!");
+      return;
+  }
+
+  var input = mode==='email' ? document.getElementById('email-in').value.trim() : document.getElementById('url-in').value.trim();
+  if(!input){ alert('Please paste content to scan.'); return; }
+  busy=true;
+  document.querySelectorAll('.scan-btn').forEach(function(b){b.disabled=true;});
+  clearResult();
+  document.getElementById('loading').classList.add('show');
+  startSteps();
+  setApi(true,'Sending to API...');
+
+  var sys = 'You are a phishing detection expert. Analyze the provided content and respond ONLY with a JSON object. No markdown, no backticks, no explanation outside the JSON.\n\nRequired JSON structure:\n{\n  "score": <integer 0-100>,\n  "verdict": "<PHISHING|SUSPICIOUS|SAFE>",\n  "summary": "<2-4 sentence explanation>",\n  "signals": [\n    {"name": "<signal>", "status": "<danger|warn|safe>", "detail": "<explanation>"},\n    ...\n  ]\n}\n\nScoring:\n- 0-35: SAFE\n- 36-64: SUSPICIOUS  \n- 65-100: PHISHING\n\nKey things to detect:\n- Lookalike/typosquat domains (paypa1.com, amaz0n.com etc)\n- Spear phishing: fake internal IT domains + credential harvest pretext (score 70+)\n- Reply-To mismatch\n- Urgency + threat language\n- Requests for credentials or sensitive data\n- URL shorteners hiding destinations\n- High-risk TLDs (.xyz .tk .ru etc on suspicious domains)\n- For legitimate newsletters/notifications from real companies: score under 30\n\nBe accurate. Spear phishing with fake helpdesk domains asking for password resets should score 70-85.';
+
+  var userMsg = mode==='email' ? 'Analyze this email:\n\n'+input.substring(0,3000) : 'Analyze this URL:\n\n'+input;
+
+  fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      systemInstruction: {
+        parts: [{ text: sys }]
+      },
+      contents: [{
+        parts: [{ text: userMsg }]
+      }],
+      generationConfig: {
+        responseMimeType: "application/json"
+      }
+    })
+  })
+  .then(function(r){return r.json();})
+  .then(function(data){
+    if (data.error) {
+        throw new Error(data.error.message);
+    }
+    
+    var text='';
+    if(data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0]) {
+        text = data.candidates[0].content.parts[0].text.trim();
+    }
+    
+    text=text.replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'').trim();
+    var parsed=JSON.parse(text);
+    setApi(true,'Analysis by PHISHCHECK');
+    finish(parsed,input);
+  })
+  .catch(function(err){
+    setApi(false,'API error: '+(err.message||'unknown')+'  —  using local fallback');
+    finish(localFallback(input,mode),input);
+  });
+}
+
+function finish(data,input){
+  stopSteps();
+  setTimeout(function(){
+    document.getElementById('loading').classList.remove('show');
+    busy=false;
+    document.querySelectorAll('.scan-btn').forEach(function(b){b.disabled=false;});
+    showResult(data,input);
+  },300);
+}
+
+function localFallback(input,mode){
+  /* Only runs if API is unreachable */
+  var score=0, signals=[], lower=input.toLowerCase();
+  if(mode==='email'){
+    var from='';
+    input.split('\n').forEach(function(l){ if(l.toLowerCase().startsWith('from:')) from=l; });
+    var sm=from.match(/@([a-zA-Z0-9.\-]+)/i);
+    var sender=sm?sm[1].toLowerCase():'';
+    if(/paypa1|amaz0n|g[o0]{2}gle|micr[o0]s[o0]ft/i.test(sender)){ score+=35; signals.push({name:'Homoglyph Domain',status:'danger',detail:'Lookalike characters: '+sender}); }
+    else if(sender&&/\.(xyz|tk|ml|ga|ru|pw|top|click)$/.test(sender)){ score+=28; signals.push({name:'High-Risk Sender TLD',status:'danger',detail:sender}); }
+    else if(sender){ signals.push({name:'Sender Domain',status:'safe',detail:sender}); }
+    if(/helpdesk\.|it-support@|password-reset\./i.test(sender)&&/password|credential|reset/i.test(lower)){ score+=30; signals.push({name:'Spear Phishing Pattern',status:'danger',detail:'Fake IT domain + credential reset pretext'}); }
+    var urg=(lower.match(/urgent|immediately|suspended|final warning|act now|permanently/gi)||[]).length;
+    if(urg>=3){ score+=10; signals.push({name:'Urgency Tactics',status:'warn',detail:urg+' pressure phrases'}); }
+    var sus=(input.match(/https?:\/\/[^\s]+/gi)||[]).filter(function(u){ return /\.(xyz|tk|ml|ru)\//.test(u.toLowerCase()); });
+    if(sus.length){ score+=20; signals.push({name:'Suspicious Links',status:'danger',detail:sus.length+' link(s) with risky domains'}); }
+    var sens=(lower.match(/credit card|social security|ssn|bank account/gi)||[]).length;
+    if(sens){ score+=18; signals.push({name:'Data Harvesting',status:'danger',detail:'Requests sensitive financial data'}); }
+  } else {
+    if(!/^https/.test(input)){ score+=10; signals.push({name:'No HTTPS',status:'warn',detail:'Unencrypted'}); }
+    if(/paypa1|amaz0n/i.test(input)){ score+=35; signals.push({name:'Homoglyph Domain',status:'danger',detail:'Lookalike characters'}); }
+    if(/\.(xyz|tk|ml|ru|pw)/.test(input)){ score+=25; signals.push({name:'High-Risk TLD',status:'danger',detail:'Suspicious TLD'}); }
+    if(/bit\.ly|tinyurl|goo\.gl/.test(input)){ score+=18; signals.push({name:'URL Shortener',status:'warn',detail:'Destination hidden'}); }
+  }
+  score=Math.min(score,100);
+  if(!signals.length) signals.push({name:'No red flags',status:'safe',detail:'Appears clean'});
+  return {score:score,verdict:score>=65?'PHISHING':score>=36?'SUSPICIOUS':'SAFE',summary:'(Local fallback — API unavailable) '+( score>=65?'Multiple phishing indicators detected.':score>=36?'Some suspicious signals found.':'No significant indicators found.'),signals:signals};
+}
+
+function showResult(data,input){
+  var score=Math.max(0,Math.min(100,parseInt(data.score)||0));
+  var v=(data.verdict||'').toUpperCase();
+  if(!['PHISHING','SUSPICIOUS','SAFE'].includes(v)) v=score>=65?'PHISHING':score>=36?'SUSPICIOUS':'SAFE';
+  var cls,icon,lbl,sub,bc;
+  if(v==='PHISHING'||score>=65){ cls='danger-r';icon='🚨';lbl='PHISHING DETECTED';sub='High-confidence threat — do not interact';bc='linear-gradient(90deg,#ff6b35,#ff2d55)';counts.d++; }
+  else if(v==='SUSPICIOUS'||score>=36){ cls='warn-r';icon='⚠️';lbl='SUSPICIOUS';sub='Treat with caution — verify before acting';bc='linear-gradient(90deg,#ffb930,#ff6b35)';counts.w++; }
+  else{ cls='safe-r';icon='✅';lbl='LOOKS SAFE';sub='No significant phishing indicators detected';bc='linear-gradient(90deg,#00b894,#00e5a0)';counts.s++; }
+  counts.t++; updateCounts();
+  var el=document.getElementById('result');
+  el.className='result show '+cls;
+  document.getElementById('vicon').textContent=icon;
+  document.getElementById('vverdict').textContent=lbl;
+  document.getElementById('vsub').textContent=sub;
+  document.getElementById('snum').textContent=score;
+  document.getElementById('bpct').textContent=score+'/100';
+  var bf=document.getElementById('bfill');
+  bf.style.background=bc; bf.style.width='0%';
+  requestAnimationFrame(function(){ setTimeout(function(){bf.style.width=score+'%';},60); });
+  document.getElementById('expl').textContent=data.summary||'';
+  var fl=document.getElementById('flist'); fl.innerHTML='';
+  (data.signals||[]).forEach(function(sig){
+    var sc=sig.status==='danger'?'fd':sig.status==='warn'?'fw':sig.status==='safe'?'fs':'fn';
+    var sl=sig.status==='danger'?'✕ RISK':sig.status==='warn'?'! WARN':sig.status==='safe'?'✓ OK':'· INFO';
+    var si=sig.status==='danger'?'🔴':sig.status==='warn'?'🟡':sig.status==='safe'?'🟢':'⚪';
+    var row=document.createElement('div'); row.className='frow';
+    row.innerHTML='<span class="ficon">'+si+'</span><span class="fname">'+esc(sig.name)+'<br><span style="font-weight:400;color:var(--muted);font-size:11px">'+esc(sig.detail)+'</span></span><span class="fstat '+sc+'">'+sl+'</span>';
+    fl.appendChild(row);
+  });
+  var preview=(input.split('\n')[0]||input).substring(0,55);
+  hist.unshift({input:preview,score:score,cls:cls,time:new Date().toLocaleTimeString()});
+  renderHist();
+}
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function updateCounts(){ document.getElementById('st-t').textContent=counts.t; document.getElementById('st-d').textContent=counts.d; document.getElementById('st-w').textContent=counts.w; document.getElementById('st-s').textContent=counts.s; }
+function renderHist(){
+  var el=document.getElementById('hlist');
+  if(!hist.length){el.innerHTML='<div class="hempty">No scans yet.</div>';return;}
+  el.innerHTML=hist.slice(0,10).map(function(h){
+    var c=h.cls==='danger-r'?'var(--danger)':h.cls==='warn-r'?'var(--warn)':'var(--safe)';
+    return '<div class="hitem"><div class="hdot" style="background:'+c+'"></div><div class="hin">'+esc(h.input)+'</div><div class="hsc" style="color:'+c+'">'+h.score+'/100</div><div class="htm">'+h.time+'</div></div>';
+  }).join('');
+}
+function clearResult(){ document.getElementById('result').classList.remove('show'); }
+function clearHist(){ hist=[]; renderHist(); }
+
+renderHist();
+</script>
+</body>
+</html>
