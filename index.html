@@ -214,7 +214,7 @@ textarea:focus, input[type=text]:focus { border-color: var(--accent); box-shadow
 
   <div class="api-note" id="api-note">
     <div class="adot on" id="adot"></div>
-    <span id="amsg">PHISHCHECK ready and API working</span>
+    <span id="amsg">PHISHCHECK ready and working</span>
   </div>
 
   <div class="loading" id="loading">
@@ -314,7 +314,7 @@ function doScan(){
   clearResult();
   document.getElementById('loading').classList.add('show');
   startSteps();
-  setApi(true,'Sending to API...');
+  setApi(true,'Checking...');
 
   var sys = 'You are a phishing detection expert. Analyze the provided content and respond ONLY with a JSON object. No markdown, no backticks, no explanation outside the JSON.\n\nRequired JSON structure:\n{\n  "score": <integer 0-100>,\n  "verdict": "<PHISHING|SUSPICIOUS|SAFE>",\n  "summary": "<2-4 sentence explanation>",\n  "signals": [\n    {"name": "<signal>", "status": "<danger|warn|safe>", "detail": "<explanation>"},\n    ...\n  ]\n}\n\nScoring:\n- 0-35: SAFE\n- 36-64: SUSPICIOUS  \n- 65-100: PHISHING\n\nKey things to detect:\n- Lookalike/typosquat domains (paypa1.com, amaz0n.com etc)\n- Spear phishing: fake internal IT domains + credential harvest pretext (score 70+)\n- Reply-To mismatch\n- Urgency + threat language\n- Requests for credentials or sensitive data\n- URL shorteners hiding destinations\n- High-risk TLDs (.xyz .tk .ru etc on suspicious domains)\n- For legitimate newsletters/notifications from real companies: score under 30\n\nBe accurate. Spear phishing with fake helpdesk domains asking for password resets should score 70-85.';
 
@@ -349,7 +349,7 @@ function doScan(){
     finish(parsed,input);
   })
   .catch(function(err){
-    setApi(false,'API error: '+(err.message||'unknown')+'  —  using local fallback');
+    setApi(false,'Error: '+(err.message||'unknown')+'  —  using local fallback');
     finish(localFallback(input,mode),input);
   });
 }
@@ -390,7 +390,7 @@ function localFallback(input,mode){
   }
   score=Math.min(score,100);
   if(!signals.length) signals.push({name:'No red flags',status:'safe',detail:'Appears clean'});
-  return {score:score,verdict:score>=65?'PHISHING':score>=36?'SUSPICIOUS':'SAFE',summary:'(Local fallback — API unavailable) '+( score>=65?'Multiple phishing indicators detected.':score>=36?'Some suspicious signals found.':'No significant indicators found.'),signals:signals};
+  return {score:score,verdict:score>=65?'PHISHING':score>=36?'SUSPICIOUS':'SAFE',summary:'(Local fallback — network unavailable) '+( score>=65?'Multiple phishing indicators detected.':score>=36?'Some suspicious signals found.':'No significant indicators found.'),signals:signals};
 }
 
 function showResult(data,input){
